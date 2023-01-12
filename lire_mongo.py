@@ -19,8 +19,8 @@ st.title ("Tableau pour lire pymongo")
 st.header("URI, Open Client")
 
 # secret
-st.session_state['username'] = st.secrets['db_username']
-st.session_state['pw'] = st.secrets['db_pw']
+#st.session_state['username'] = st.secrets['db_username']
+#st.session_state['pw'] = st.secrets['db_pw']
 
 #st.write(st.session_state)
 
