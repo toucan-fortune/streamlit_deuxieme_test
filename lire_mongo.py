@@ -33,10 +33,10 @@ def init_connection():
     # Chercher les données dans le fichier secrets.toml
     return pymongo.MongoClient("mongodb+srv://toucanfortune:rouedefortune@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
 
-@st.experimental_singleton
-def init_connection_2():
+#@st.experimental_singleton
+#def init_connection_2():
     # Chercher les données dans le fichier secrets.toml
-    return pymongo.MongoClient("mongodb+srv://st.session_state['username']:st.session_state['pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
+#    return pymongo.MongoClient("mongodb+srv://st.session_state['username']:st.session_state['pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
 
 client = init_connection()
 
