@@ -1,5 +1,10 @@
 import streamlit as st
 import pymongo
+import numpy as np
+import pandas as pd
+import time
+import random
+import plotly.express as px
 
 # dans le requirements.txt
 # ne pas installer time (ou autre module)
@@ -8,122 +13,172 @@ import pymongo
 # local run
 # streamlit run lire_mongo.py
 
-st.title ("Dashboard pour tester pymongo")
-
-# MongoDB account OK
-# Atlas cluster OK
-# username, passwork OK
-# IP OK
-# connection string OK
-
-# Interact with cluster...
-# ...with JS GUI 
-# ...**connect app with drivers**
-# ...connect with Compass
-
-# https://www.mongodb.com/docs/guides/crud/install/
-# https://www.mongodb.com/docs/guides/atlas/connection-string/
-
-# pip install pymongo[srv]
-
+##################################################
+st.title ("Tableau pour lire pymongo")
 
 st.header("URI, Open Client")
 
-# Replace the uri string with your
-# MongoDB deployment's connection string
-uri = "mongodb+srv://toucanfortune:4Yiv7jZl6H1knJ0U@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority"
-#uri_local = "mongodb://localhost:27017"
+# secret
+st.session_state['username'] = st.secrets['db_username']
+st.session_state['pw'] = st.secrets['db_pw']
 
-st.write("uri: ")
-st.write(uri)
+#st.write(st.session_state)
 
-client = pymongo.MongoClient(uri)
-#client = pymongo.MongoClient(uri_local) 
-st.write("open client")
+# Exécuter 1 seule fois...
+# https://docs.streamlit.io/streamlit-cloud/get-started/deploy-an-app/connect-to-data-sources/secrets-management
+# https://docs.streamlit.io/library/api-reference/performance/st.experimental_singleton
+# https://docs.streamlit.io/library/api-reference/performance/st.experimental_singleton.clear
+@st.experimental_singleton
+def init_connection():
+    # Chercher les données dans le fichier secrets.toml
+    return pymongo.MongoClient("mongodb+srv://toucanfortune:rouedefortune@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
 
+@st.experimental_singleton
+def init_connection_2():
+    # Chercher les données dans le fichier secrets.toml
+    return pymongo.MongoClient("mongodb+srv://st.session_state['username']:st.session_state['pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
 
-st.header("DBS, Collections")
+client = init_connection()
 
-db = client.toucan_test
+db = client.toucan
+#st.write(db)
 
-st.write("db: ")
-st.write(db)
+#coll = db.test_premier
+#st.write(coll)
 
-st.write("collections: ")
-st.write(db.list_collection_names())
+#items = db.test_premier.find()
+#st.write(items)
+#liste_items = list(items)
 
-coll = db.test_premier
+#for item in items:
+#    st.write(item)
 
-st.write("collection: ")
-st.write(coll)
+# 1 sort ascending, oldest to newest
+items = db.messages.find().sort("heure", 1).limit(1)
+liste_items = list(items)
 
+for item in liste_items:
+    st.write(item)
 
-st.header("CRUD")
+# -1 sort descending, newest to oldest
+items = db.messages.find().sort("heure", -1).limit(1)
+liste_items = list(items)
 
-st.write("attributes: ")
-st.write(dir(coll))
+for item in liste_items:
+    st.write(item)
 
-# find code
-cursor = coll.find()
-# iterate code
-liste_account_id = []
-st.write("documents (boucle for): ")
-for doc in cursor:
-    st.write(doc)
-    st.write("keys: ")
-    st.write(doc.keys())
-    st.write("account_id: ")
-    st.write(doc["account_id"])
-    liste_account_id.append(doc["account_id"])
-
-st.write("liste account_id: ")
-st.write(liste_account_id)
-st.write("extraction de liste account_id: ")
-st.write(liste_account_id[1])
-#st.write(type(liste_account_id))
-
-st.write("metrics: ")
-st.metric(label="Account ID",
-          value=liste_account_id[1],
-          delta=None,
-          delta_color="normal",
-          label_visibility="visible")
+st.write("---")
 
 
-cursor = coll.find({"limit": 9000})
-st.write("liste de documents avec .find({\"limit\": 9000}: ")
-cursor_l = list(cursor)
-st.write("extraction de liste: ")
-st.write(cursor_l[0])
-st.write("extraction de liste, puis extraction de account_id: ")
-st.write(cursor_l[0]["account_id"])
+# Importer les données de la collection
+# https://docs.streamlit.io/library/api-reference/performance/st.experimental_memo
+@st.experimental_memo
+def get_data():
+    db = client.toucan
+    items = db.messages.find()
+    liste_items = list(items)
+    return liste_items
 
-st.write("metrics: ")
-st.metric(label="Account ID",
-          value=cursor_l[0]["account_id"],
-          delta=None,
-          delta_color="normal",
-          label_visibility="visible")
+liste_items = get_data()
 
+st.write(liste_items[0:2])
 
-cursor = coll.find({"limit": 9000})
-st.write("documents avec .find({\"limit\": 9000}: ")
-st.write("dans chaque document, avec la clé .limit")
-#for doc in cursor:
-    #print(doc)
-#    st.write(doc)
+#for item in items:
+#    st.write(item['valeur'])
+
+st.write("---")
 
 
+df = pd.DataFrame(liste_items)
+st.write(df)
+
+st.write("---")
+
+
+# ttl: la mémorisation est gardée en mémoire un certain temps (secondes)
+# Persistent memo caches
+# Durant ce temps, la même requête ne donne rien, car la fonction
+# a mémorisé le résultat
+# Après ce temps, la même requête donne une nouvelle exécution
+@st.experimental_memo(ttl=3)
+def load_data(rows):
+    chart_data = pd.DataFrame(
+        np.random.randn(rows, 10),
+        columns=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+    )
+    # Contains a static element st.area_chart
+    st.line_chart(chart_data) # This will be recorded and displayed even when the function is skipped
+    return chart_data
+
+df = load_data(20)
+
+st.dataframe(df)
+
+st.write("---")
+
+# https://towardsdatascience.com/creating-dynamic-dashboards-with-streamlit-747b98a68ab5
+placeholder = st.empty()
+start_button = st.empty()
+
+
+def radar_chart():  
+    df = pd.DataFrame(dict(r=[random.randint(0,22),
+                              random.randint(0,22),
+                              random.randint(0,22),
+                              random.randint(0,22),
+                              random.randint(0,22)],
+                           theta=['processing cost',
+                                  'mechanical properties',
+                                  'chemical stability',
+                                  'thermal stability',
+                                  'device integration']))
+    
+    fig = px.line_polar(df, r='r', theta='theta', line_close=True)
+    placeholder.write(fig)
+
+# Affiche le bouton et si le bouton est pressé
+if start_button.button('Start', key='start'):
+    # Cache le bouton
+    start_button.empty()
+    # Affiche le bouton et...
+    if st.button('Stop', key='stop'):
+        pass
+    # ...exécute la boucle tant que le bouton n'est pas pressé
+    while True:
+        # Exécute la fonction à intervalles
+        radar_chart()
+        time.sleep(0.5)
+
+# bouton start, end
+# bouton fetch
+# sélection de périodes de temps
+# sélection du temps pour le sleep
+# sélection graphique: line, bar
+
+st.write("---")
 
 
 
+st.write("---")
 
-st.header("Close Client")
+# show dbs
+# use database
+# show collections
+# show users
+# show roles
+# client.close()
+# db.collection.count()
+# db.collection.findOne()
+# db.collection.find(). prettyPrint()
+# db.collection.find({"field": "value"})
+# db.collection.find({"field": "value"}).count()
+# db.collection.find({"student_id": 151, "class_id": 339})
+# db.collection.find({"pop": {$lt: 1000}})
+# $lt, $lte, $gt, $gte, $ne, $eq, $in, $nin
+# $or, $and, $not, $nor
+# $exists, $type, $regex
+# $expr, look at the value of that field rather than the field name
+# $all, $size, $in, $elemMatch
+# projections
 
-client.close()
-st.write("close client")
-
-
-# https://www.pubnub.com/blog/realtime-mongodb-to-fetch-and-stream-report-data/
-# https://www.pubnub.com/docs
-# https://www.pubnub.com/docs/sdks/python
+# json to dataframe
