@@ -25,7 +25,7 @@ st.header("URI, Open Client")
 @st.experimental_singleton
 def init_connection():
     # Chercher les données dans le fichier secrets.toml
-    URI = "mongodb+srv://st.secrets['db_username']:st.secrets['db_pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority"
+    URI = f"mongodb+srv://{st.secrets['db_username']}:{st.secrets['db_pw']}@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority"
     return pymongo.MongoClient(URI)
 
 client = init_connection()
