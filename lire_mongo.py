@@ -18,12 +18,6 @@ st.title ("Tableau pour lire pymongo")
 
 st.header("URI, Open Client")
 
-# secret
-#st.session_state['username'] = st.secrets['db_username']
-#st.session_state['pw'] = st.secrets['db_pw']
-
-#st.write(st.session_state)
-
 # Exécuter 1 seule fois...
 # https://docs.streamlit.io/streamlit-cloud/get-started/deploy-an-app/connect-to-data-sources/secrets-management
 # https://docs.streamlit.io/library/api-reference/performance/st.experimental_singleton
@@ -31,12 +25,8 @@ st.header("URI, Open Client")
 @st.experimental_singleton
 def init_connection():
     # Chercher les données dans le fichier secrets.toml
-    return pymongo.MongoClient("mongodb+srv://toucanfortune:rouedefortune@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
-
-#@st.experimental_singleton
-#def init_connection_2():
-    # Chercher les données dans le fichier secrets.toml
-#    return pymongo.MongoClient("mongodb+srv://st.session_state['username']:st.session_state['pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority")
+    URI = "mongodb+srv://st.secrets['db_username']:st.secrets['db_pw']@toucanfortune.gzo0glz.mongodb.net/?retryWrites=true&writeConcern=majority"
+    return pymongo.MongoClient(URI)
 
 client = init_connection()
 
