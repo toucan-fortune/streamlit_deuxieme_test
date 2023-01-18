@@ -1,4 +1,0 @@
-https://blog.streamlit.io/how-to-build-a-real-time-live-dashboard-with-streamlit/
-------------------------------------------
-https://www.amazon.com/Web-Application-Development-Streamlit-Applications/dp/1484281101?&linkCode=ll1&tag=mkhorasani09-20&linkId=a0cb2bc17df598006fd9029c58792a6b&language=en_US&ref_=as_li_ss_tl
----------------------------------------
